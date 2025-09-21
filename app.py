@@ -1,78 +1,86 @@
 import streamlit as st
 import pandas as pd
 import os
-from extractor import read_pdf, read_docx, extract_skills, SKILL_SET
+from extractor import read_pdf, read_docx, extract_skills, clean_text
+from parser import parse_jd, parse_resume
 from scorer import score_resume
 from feedback import generate_feedback
-import matplotlib.pyplot as plt
+from resumechecker import semantic_match
 
-st.set_page_config(page_title="Resume Relevance - Pro", layout="wide")
-st.title("🚀 Resume Relevance Checker")
+st.set_page_config(page_title="🚀 Resume Relevance Checker", layout="wide")
+st.title("Resume Relevance & AI Scoring Platform")
 
-# --- Skill weights
+# --- Sidebar: Skill Weights ---
+st.sidebar.header("Adjust Skill Weights (optional)")
 default_weights = {
     "python": 2.5, "sql": 2.0, "pandas": 1.5, "numpy": 1.2,
-    "power bi": 1.5, "tableau": 1.5, "machine learning": 2.0,
-    "nlp": 2.0, "spark": 1.5, "pyspark": 1.5
+    "power bi": 1.5, "tableau": 1.5, "machine learning": 2.0, "nlp": 2.0,
+    "spark": 1.5, "pyspark": 1.5
 }
-
-st.sidebar.header("Adjust Skill Weights (optional)")
 weights = {}
 for k,v in default_weights.items():
     val = st.sidebar.number_input(k, min_value=0.0, max_value=5.0, value=float(v), step=0.1)
     weights[k] = val
 
-# Upload JD & Resumes
-jd_file = st.file_uploader("Upload JD (PDF/DOCX)", type=["pdf","docx"])
+# --- Upload JD & Resumes ---
+jd_file = st.file_uploader("Upload Job Description (PDF/DOCX)", type=["pdf","docx"])
 resumes = st.file_uploader("Upload Resumes (PDF/DOCX) — multiple", type=["pdf","docx"], accept_multiple_files=True)
 
 if st.button("Evaluate ▶️"):
-    if not jd_file or not resumes:
-        st.error("Upload both JD and at least one resume to proceed.")
+    if not jd_file:
+        st.error("Please upload a JD file.")
+        st.stop()
+    if not resumes:
+        st.error("Please upload at least one resume.")
         st.stop()
 
-    # Read JD
-    if jd_file.name.endswith(".pdf"):
-        jd_text = read_pdf(jd_file)
-    else:
-        jd_text = read_docx(jd_file)
+    # Parse JD
+    jd_text = read_pdf(jd_file) if jd_file.type=="application/pdf" else read_docx(jd_file)
+    jd_data = parse_jd(jd_text)
+    jd_skills = jd_data['skills']
 
-    jd_skills = extract_skills(jd_text, SKILL_SET)
-    st.subheader("🔎 Extracted JD Skills / Phrases")
-    st.write(", ".join(jd_skills) if jd_skills else "No skill phrases detected.")
+    st.subheader("🔎 Extracted JD Skills")
+    st.write(", ".join(jd_skills))
 
-    # Process resumes
-    rows = []
+    # Evaluate each resume
+    results = []
     for r in resumes:
-        if r.name.endswith(".pdf"):
-            rtext = read_pdf(r)
-        else:
-            rtext = read_docx(r)
-        score, verdict, color, matched, missing, details = score_resume(jd_skills, rtext, weights)
-        feedback = generate_feedback(r.name, score, matched, missing)
+        rname = r.name
+        rtext = read_pdf(r) if r.type=="application/pdf" else read_docx(r)
+        resume_data = parse_resume(rtext)
 
-        rows.append({
-            "Resume": r.name,
-            "Score": score,
+        # Hard skill match score
+        score, matched, missing = score_resume(jd_skills, rtext, weights)
+
+        # Semantic match using embeddings
+        semantic_score = semantic_match(jd_text, rtext)
+
+        # Combined score (50% hard + 50% semantic)
+        final_score = round((score*0.5 + semantic_score*0.5),2)
+
+        verdict = "High" if final_score>=80 else "Medium" if final_score>=55 else "Low"
+        feedback = generate_feedback(rname, final_score, matched, missing)
+
+        results.append({
+            "Resume": rname,
+            "Score": final_score,
             "Verdict": verdict,
             "Matched": "; ".join(matched),
             "Missing": "; ".join(missing),
             "Feedback": feedback
         })
 
-    df = pd.DataFrame(rows).sort_values("Score", ascending=False).reset_index(drop=True)
-
-    st.subheader("🏆 Summary & Ranking")
+    df = pd.DataFrame(results).sort_values("Score", ascending=False)
+    st.subheader("🏆 Candidate Ranking")
     st.dataframe(df[["Resume","Score","Verdict"]])
 
     st.subheader("📊 Score Distribution")
     st.bar_chart(df.set_index("Resume")["Score"])
 
-    st.subheader("🧾 Detailed results")
+    st.subheader("🧾 Detailed Feedback")
     for idx, r in df.iterrows():
         st.markdown(f"### {r['Resume']} — {r['Score']}% — **{r['Verdict']}**")
         st.markdown(r["Feedback"])
         st.write("---")
 
-    st.download_button("💾 Download full results CSV", df.to_csv(index=False).encode(), "results.csv", "text/csv")
-
+    st.download_button("💾 Download Full Results CSV", df.to_csv(index=False).encode(), "results.csv", "text/csv")
