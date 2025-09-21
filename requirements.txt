@@ -1,11 +1,6 @@
 streamlit
-pandas
 pdfplumber
 python-docx
+docx2txt
 spacy
 scikit-learn
-matplotlib
-nltk
-transformers
-torch
-sentence-transformers
