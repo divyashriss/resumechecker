@@ -1,12 +1,31 @@
 def generate_feedback(resume_name, score, matched, missing):
-    fb = f"**Feedback for {resume_name}**\n\n"
-    fb += f"Matched Skills ({len(matched)}): {', '.join(matched) if matched else 'None'}\n"
-    fb += f"Missing Skills ({len(missing)}): {', '.join(missing) if missing else 'None'}\n\n"
+    """
+    Generates concise, professional feedback for a resume.
+    """
+    feedback = f"**Feedback for {resume_name}:**\n\n"
+    feedback += f"- Relevance Score: {score}%\n"
     
-    if score >= 80:
-        fb += "✅ Excellent match! Strong fit for the role.\n"
-    elif score >= 55:
-        fb += "⚠️ Moderate match. Consider improving missing skills.\n"
+    if matched:
+        feedback += f"- Strongly matched skills: {', '.join(matched[:10])}\n"
+        if len(matched) > 10:
+            feedback += f"  *(and {len(matched)-10} more skills matched)*\n"
     else:
-        fb += "❌ Low match. Significant improvement needed before applying.\n"
-    return fb
+        feedback += "- No strong skill matches found.\n"
+
+    if missing:
+        feedback += f"- Missing important skills: {', '.join(missing[:10])}\n"
+        if len(missing) > 10:
+            feedback += f"  *(and {len(missing)-10} more skills missing)*\n"
+
+    # Quick suggestions based on missing skills
+    if score < 55:
+        feedback += "\n**Suggestions:** Consider highlighting key skills in your resume, " \
+                    "add relevant projects, certifications, or trainings to increase your match."
+    elif score < 80:
+        feedback += "\n**Suggestions:** Good match! You can further improve by emphasizing missing or secondary skills."
+
+    else:
+        feedback += "\n**Suggestions:** Excellent match! Keep your resume up-to-date and tailored to the job."
+
+    return feedback
+
