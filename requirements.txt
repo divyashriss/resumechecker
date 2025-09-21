@@ -2,4 +2,10 @@ streamlit
 pandas
 pdfplumber
 python-docx
+spacy
+scikit-learn
 matplotlib
+nltk
+transformers
+torch
+sentence-transformers
