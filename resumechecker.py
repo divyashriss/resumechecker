@@ -3,17 +3,6 @@ from scorer import score_resume
 from feedback import generate_feedback
 from parser import parse_jd
 
-
-
-def semantic_match(jd_text, resume_text):
-    """
-    Placeholder function for semantic matching.
-    Returns 0 similarity for now.
-    """
-    return 0
-
-
-
 def check_resume(jd_file, resume_file, weights=None):
     # Read JD (pretend always PDF for now)
     jd_text = read_pdf(jd_file)
@@ -52,6 +41,14 @@ if __name__ == "__main__":
     resume = "sample_resume.pdf"
     result = check_resume(jd, resume)
     print(result["Feedback"])
+
+def semantic_match(jd_text, resume_text):
+    """
+    Placeholder function for semantic matching.
+    Returns 0 similarity for now.
+    """
+    return 0
+
 
 
 
