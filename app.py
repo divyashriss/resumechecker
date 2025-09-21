@@ -5,7 +5,7 @@ from extractor import read_pdf, read_docx, extract_skills, clean_text
 from parser import parse_jd, parse_resume
 from scorer import score_resume
 from feedback import generate_feedback
-from resumechecker import semantic_match
+
 
 st.set_page_config(page_title="🚀 Resume Relevance Checker", layout="wide")
 st.title("Resume Relevance & AI Scoring Platform")
@@ -84,3 +84,4 @@ if st.button("Evaluate ▶️"):
         st.write("---")
 
     st.download_button("💾 Download Full Results CSV", df.to_csv(index=False).encode(), "results.csv", "text/csv")
+
