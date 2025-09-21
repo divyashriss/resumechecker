@@ -5,7 +5,7 @@ from parser import parse_jd
 
 
 
-def semantic_mat(jd_text, resume_text):
+def semantic_match(jd_text, resume_text):
     """
     Placeholder function for semantic matching.
     Returns 0 similarity for now.
@@ -52,5 +52,6 @@ if __name__ == "__main__":
     resume = "sample_resume.pdf"
     result = check_resume(jd, resume)
     print(result["Feedback"])
+
 
 
