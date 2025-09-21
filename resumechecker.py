@@ -42,12 +42,8 @@ if __name__ == "__main__":
     result = check_resume(jd, resume)
     print(result["Feedback"])
 
-def semantic_match(jd_text, resume_text):
-    """
-    Placeholder function for semantic matching.
-    Returns 0 similarity for now.
-    """
-    return 0
+
+
 
 
 
