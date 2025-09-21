@@ -2,7 +2,7 @@ from extractor import read_pdf, read_docx, extract_skills
 from scorer import score_resume
 from feedback import generate_feedback
 from parser import parse_jd
-from requirement import get_requirements
+
 
 def check_resume(jd_file, resume_file, weights=None):
     # Read JD (pretend always PDF for now)
@@ -42,3 +42,4 @@ if __name__ == "__main__":
     resume = "sample_resume.pdf"
     result = check_resume(jd, resume)
     print(result["Feedback"])
+
