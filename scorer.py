@@ -3,11 +3,21 @@ from collections import Counter
 from extractor import clean_text
 
 def score_resume(keywords, resume_text, weights=None, freq_boost=True):
+    """
+    keywords: list of JD skills/phrases (strings)
+    resume_text: full resume text (string)
+    weights: dict mapping skill -> weight (float). if not present, weight=1
+    freq_boost: if True, multiple mentions add small bonus
+    
+    Returns:
+        score (0-100), verdict, color, matched list, missing list, details dict
+    """
     resume_clean = clean_text(resume_text)
     total_weight = 0.0
     achieved = 0.0
     matched = []
     missing = []
+
     tokens = resume_clean.split()
     token_counter = Counter(tokens) if freq_boost else None
 
@@ -15,13 +25,14 @@ def score_resume(keywords, resume_text, weights=None, freq_boost=True):
         k_clean = clean_text(k)
         w = float(weights.get(k, 1.0)) if weights else 1.0
         total_weight += w
+
         pattern = r'\b' + re.escape(k_clean) + r'\b'
         if re.search(pattern, resume_clean):
             matched.append(k)
             bonus = 0.0
             if freq_boost and token_counter:
                 parts = k_clean.split()
-                counts = [token_counter.get(p,0) for p in parts]
+                counts = [token_counter.get(p, 0) for p in parts]
                 count_phrase = min(counts) if counts else 0
                 if count_phrase > 1:
                     bonus = 0.15 * (count_phrase - 1) * w
@@ -39,6 +50,7 @@ def score_resume(keywords, resume_text, weights=None, freq_boost=True):
 
     details = {
         "total_weight": total_weight,
-        "achieved_weight": round(achieved,2)
+        "achieved_weight": round(achieved, 2)
     }
+
     return score, verdict, color, matched, missing, details
